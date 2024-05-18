@@ -1,0 +1,150 @@
+const hamburger = document.querySelector(".hamburger");
+const navMenu = document.querySelector(".nav-menu");
+
+document.addEventListener("DOMContentLoaded", function () {
+    setTimeout(function () {
+        document.querySelector("body").classList.add("loaded");
+    }, 500)
+});
+
+hamburger.addEventListener("click", mobileMenu);
+function mobileMenu() {
+    hamburger.classList.toggle("active");
+    navMenu.classList.toggle("active");
+}
+
+const navLink = document.querySelectorAll(".nav-link");
+navLink.forEach(n => n.addEventListener("click", closeMenu));
+
+function closeMenu() {
+    hamburger.classList.remove("active");
+    navMenu.classList.remove("active");
+}
+
+
+async function fetchContributors(pageNumber) {
+    const perPage = 100;
+    const url = `https://api.github.com/repos/${owner}/${repoName}/contributors?page=${pageNumber}&per_page=${perPage}`;
+
+    const response = await fetch(url);
+    if (!response.ok) {
+        throw new Error(`Failed to fetch contributors data. Status code: ${response.status}`);
+    }
+
+    const contributorsData = await response.json();
+    return contributorsData;
+}
+
+
+let calcScrollValue = () => {
+    let scrollProg = document.getElementById("progress");
+    let pos = document.documentElement.scrollTop;
+    let calcHeight =
+        document.documentElement.scrollHeight -
+        document.documentElement.clientHeight;
+    let scrollValue = Math.round((pos * 100) / calcHeight);
+    if (pos > 100) {
+        scrollProg.style.display = "grid";
+    } else {
+        scrollProg.style.display = "none";
+    }
+    scrollProg.addEventListener("click", () => {
+        document.documentElement.scrollTop = 0;
+    });
+    scrollProg.style.background = `conic-gradient(#0063ba ${scrollValue}%, #d499de ${scrollValue}%)`;
+};
+
+window.addEventListener('scroll', function () {
+    var scrollToTopButton = document.getElementById('progress');
+    if (window.pageYOffset > 200) {
+        scrollToTopButton.style.display = 'block';
+    } else {
+        scrollToTopButton.style.display = 'none';
+    }
+});
+
+window.onscroll = calcScrollValue;
+window.onload = calcScrollValue;
+
+// Function to filter calculators
+function filterCalculators() {
+    var input, filter, calculators, i;
+    input = document.getElementById('calculatorSearch');
+    filter = input.value.toUpperCase();
+    calculators = document.querySelectorAll('.container .box');
+    console.log(filter)
+    console.log(calculators)
+
+    for (i = 0; i < calculators.length; i++) {
+        var calculator = calculators[i];
+        var h2 = calculator.querySelector('h2');
+        var calculatorName = h2.textContent || h2.innerText;
+
+        if (calculatorName.toUpperCase().indexOf(filter) > -1) {
+            calculator.style.display = "flex";
+        } else {
+            calculator.style.display = "none";
+        }
+    }
+}
+
+// Voice command in search bar feature
+const searchBar = document.querySelector("#searchBar");
+const searchBarInput = searchBar.querySelector("input");
+
+// The speech recognition interface lives on the browser’s window object
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition; // if none exists -> undefined
+
+if (SpeechRecognition) {
+    console.log("Your Browser supports speech Recognition");
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    // recognition.lang = "en-US";
+
+    searchBar.insertAdjacentHTML("beforeend", '<button type="button"><i class="fas fa-microphone"></i></button>');
+    // searchBarInput.style.paddingRight = "50px";
+
+    const micBtn = searchBar.querySelector("button");
+    const micIcon = micBtn.firstElementChild;
+
+    micBtn.addEventListener("click", micBtnClick);
+    function micBtnClick() {
+        if (micIcon.classList.contains("fa-microphone")) { // Start Voice Recognition
+            recognition.start(); // First time you have to allow access to mic!
+        }
+        else {
+            recognition.stop();
+        }
+    }
+
+    recognition.addEventListener("start", startSpeechRecognition); // <=> recognition.onstart = function() {...}
+    function startSpeechRecognition() {
+        micIcon.classList.remove("fa-microphone");
+        micIcon.classList.add("fa-microphone-slash");
+        searchFormInput.focus();
+        console.log("Voice activated, SPEAK");
+    }
+
+    recognition.addEventListener("end", endSpeechRecognition); // <=> recognition.onend = function() {...}
+    function endSpeechRecognition() {
+        micIcon.classList.remove("fa-microphone-slash");
+        micIcon.classList.add("fa-microphone");
+        searchBarInput.focus();
+        console.log("Speech recognition service disconnected");
+    }
+
+    recognition.addEventListener("result", resultOfSpeechRecognition); // <=> recognition.onresult = function(event) {...} - Fires when you stop talking
+    function resultOfSpeechRecognition(event) {
+        const current = event.resultIndex;
+        const transcript = event.results[current][0].transcript;
+        newtranscript = transcript.endsWith('.') ? transcript.slice(0, -1) : transcript;
+        console.log(newtranscript)
+        searchBarInput.value = newtranscript;
+        filterCalculators();
+    }
+}
+else {
+    console.log("Your Browser does not support speech Recognition");
+    info.textContent = "Your Browser does not support Speech Recognition";
+}
